@@ -21,8 +21,8 @@ async def apply(payload: UserDetails, user=Depends(auth_required)):
 
     # Check if user already has an application
     # At the moment only one application is allowed
-    _ap = await ApplicationDoc.find_one({"user_id": _user.id})
-    if _ap:
+    _application = await ApplicationDoc.find_one({"user_id": _user.id})
+    if _application:
         raise HTTPException(
             status_code=400,
             detail="Application already exists, visit cabinet to check status",
@@ -80,15 +80,15 @@ async def cabinet(user=Depends(auth_required)):
     _user = await UserDoc.get(user.get("sub"))
     # User is allowed to have only one application
     # So cabinet is used to get the reference of the application
-    _ap = await ApplicationDoc.find_one({"user_id": _user.id})
-    if not _ap:
+    _application = await ApplicationDoc.find_one({"user_id": _user.id})
+    if not _application:
         raise HTTPException(
             status_code=404,
             detail="Application not found",
         )
 
     return {
-        "reference": f"REF_{str(_ap.id)}",
+        "reference": f"REF_{str(_application.id)}",
     }
 
 
@@ -97,13 +97,13 @@ async def cabinet_status(reference: str, user=Depends(auth_required)):
     # TODO: Use reference in pair with user_id to get the application status
     # Because in future multiple applications will be allowed
     _user = await UserDoc.get(user.get("sub"))
-    _ap = await ApplicationDoc.find_one({"user_id": _user.id})
-    if not _ap:
+    _application = await ApplicationDoc.find_one({"user_id": _user.id})
+    if not _application:
         raise HTTPException(
             status_code=404,
             detail="Application not found",
         )
 
     return {
-        "status": _ap.status,
+        "status": _application.status,
     }
