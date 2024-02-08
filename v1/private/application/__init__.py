@@ -101,8 +101,6 @@ async def cabinet_status(reference: str, user=Depends(auth_required)):
             status_code=400,
             detail="Invalid reference",
         )
-    # TODO: Use reference in pair with user_id to get the application status
-    # Because in future multiple applications will be allowed
     _user = await UserDoc.get(user.get("sub"))
 
     reference = PydanticObjectId(reference.split("_")[1])
