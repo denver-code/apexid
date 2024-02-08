@@ -11,19 +11,26 @@ from v1.models.user import BirthData, UserDoc
 from v1.schemas.application import ZitadelProvided
 from v1.schemas.user import UserDetails
 
+
 application_router = APIRouter(prefix="/application")
 
 
 @application_router.post("/apply")
 async def apply(payload: UserDetails, user=Depends(auth_required)):
     _user = await UserDoc.get(user.get("sub"))
+
+    # Check if user already has an application
+    # At the moment only one application is allowed
     _ap = await ApplicationDoc.find_one({"user_id": _user.id})
     if _ap:
         raise HTTPException(
             status_code=400,
             detail="Application already exists, visit cabinet to check status",
         )
+
+    # if user is not active or missing some field it will return an error, raise an error
     try:
+        # Getting user details from Zitadel
         _zd = ZitadelProvided(
             id=user.get("sub"),
             active=user.get("active"),
@@ -37,8 +44,10 @@ async def apply(payload: UserDetails, user=Depends(auth_required)):
         raise HTTPException(status_code=400, detail=str(e))
 
     if not _user:
+        # To create an application user must exist in the database
         new_user = await UserDoc(
             id=_zd.id,
+            # Zitadel ID is used as a AIDN (Apex ID Number)
             email=_zd.email,
             first_name=_zd.first_name,
             gender=_zd.gender,
@@ -69,6 +78,8 @@ async def apply(payload: UserDetails, user=Depends(auth_required)):
 @application_router.get("/cabinet")
 async def cabinet(user=Depends(auth_required)):
     _user = await UserDoc.get(user.get("sub"))
+    # User is allowed to have only one application
+    # So cabinet is used to get the reference of the application
     _ap = await ApplicationDoc.find_one({"user_id": _user.id})
     if not _ap:
         raise HTTPException(
@@ -83,6 +94,8 @@ async def cabinet(user=Depends(auth_required)):
 
 @application_router.get("/cabinet/{reference}/status/")
 async def cabinet_status(reference: str, user=Depends(auth_required)):
+    # TODO: Use reference in pair with user_id to get the application status
+    # Because in future multiple applications will be allowed
     _user = await UserDoc.get(user.get("sub"))
     _ap = await ApplicationDoc.find_one({"user_id": _user.id})
     if not _ap:
