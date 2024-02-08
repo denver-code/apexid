@@ -10,6 +10,7 @@ from v1.models.application import ApplicationDoc
 from v1.models.user import BirthData, UserDoc
 from v1.schemas.application import ZitadelProvided
 from v1.schemas.user import UserDetails
+from beanie import PydanticObjectId
 
 
 application_router = APIRouter(prefix="/application")
@@ -94,10 +95,18 @@ async def cabinet(user=Depends(auth_required)):
 
 @application_router.get("/cabinet/{reference}/status/")
 async def cabinet_status(reference: str, user=Depends(auth_required)):
+    # Check if reference is valid
+    if not re.match(r"REF_[0-9]+", reference):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid reference",
+        )
     # TODO: Use reference in pair with user_id to get the application status
     # Because in future multiple applications will be allowed
     _user = await UserDoc.get(user.get("sub"))
-    _application = await ApplicationDoc.find_one({"user_id": _user.id})
+
+    reference = PydanticObjectId(reference.split("_")[1])
+    _application = await ApplicationDoc.find_one({"user_id": _user.id, "id": reference})
     if not _application:
         raise HTTPException(
             status_code=404,
