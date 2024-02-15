@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, validator
 from app.core.email_fixer import EmailFixer
 import re
@@ -38,3 +39,7 @@ class ZitadelProvided(BaseModel):
 
 class Application(BaseModel):
     payload: UserDetails
+
+
+class ApplicationVerdictMessage(BaseModel):
+    message: Optional[str] = None

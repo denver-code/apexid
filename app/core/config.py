@@ -7,13 +7,11 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     PROJECT_NAME: str
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
-    API_PRIVATE_KEY_FILE: str
-    ZITADEL_DOMAIN: str
-    ZITADEL_INTROSPECTION_URL: str
-    PROJECT_ID: str
     API_BASE_URL: str
     DATABASE_NAME: str
     DATABASE_URL: str
+    SECRET_KEY: str
+    SALT_SECRET_KEY: str
 
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
