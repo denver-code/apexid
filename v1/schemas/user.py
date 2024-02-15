@@ -16,6 +16,7 @@ class UserDetails(BaseModel):
 
 class GeneralUserID(BaseModel):
     email: str
+    password: str
     first_name: str
     last_name: str
     gender: str
@@ -23,3 +24,9 @@ class GeneralUserID(BaseModel):
     phone_number: str
     nationality: str
     metadata: dict = {}
+
+
+class AuthorizarionSchema(BaseModel):
+    email: str
+    password: str
+    metadata: Optional[dict] = {}

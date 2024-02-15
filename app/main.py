@@ -1,12 +1,15 @@
 from beanie import init_beanie
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
-from app.core.authorization import auth_required
+
 
 from app.core.config import settings
 from app.core.database import db
 from v1.models.application import ApplicationDoc
-from v1.models.user import UserDoc
+from v1.models.authorized_device import AuthorizedDevice
+from v1.models.notification import Notification
+from v1.models.user import UserDoc, StaffMembership
+from v1.models.document import ApexDocument, ServiceDocument
 from v1.router import router as v1_router
 
 
@@ -34,6 +37,11 @@ async def on_startup():
         document_models=[
             UserDoc,
             ApplicationDoc,
+            AuthorizedDevice,
+            StaffMembership,
+            Notification,
+            ApexDocument,
+            ServiceDocument,
         ],
     )
 
@@ -46,12 +54,8 @@ def root():
     }
 
 
-@app.get("/protected")
-def protected(user: dict = Depends(auth_required)):
-    return {
-        "message": "Hello in Protected World",
-        "latest_version": "v1",
-    }
+api_router = APIRouter(prefix="/api")
 
+api_router.include_router(v1_router)
 
-app.include_router(v1_router)
+app.include_router(api_router)
