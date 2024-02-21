@@ -9,7 +9,7 @@ from v1.models.application import ApplicationDoc
 from v1.models.authorized_device import AuthorizedDevice
 from v1.models.notification import Notification
 from v1.models.user import UserDoc, StaffMembership
-from v1.models.document import ApexDocument, ServiceDocument
+from v1.models.document import ApexDocument, ConfrimationToken, ServiceDocument
 from v1.router import router as v1_router
 
 
@@ -42,6 +42,7 @@ async def on_startup():
             Notification,
             ApexDocument,
             ServiceDocument,
+            ConfrimationToken,
         ],
     )
 

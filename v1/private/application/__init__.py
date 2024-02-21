@@ -16,6 +16,14 @@ from v1.models.document import ServiceDocument
 application_router = APIRouter(prefix="/application")
 
 
+# list of available services
+@application_router.get("/serviceDocuments")
+async def service_documents():
+    _service_documents = await ServiceDocument.find().to_list()
+
+    return _service_documents
+
+
 @application_router.get("/{service_document_id}/apply")
 async def apply(service_document_id: str, request: Request):
     if not PydanticObjectId.is_valid(service_document_id):
@@ -90,9 +98,12 @@ async def cabinet(request: Request):
     applications = []
 
     for ap in _ap:
+        service_document = await ServiceDocument.get(ap.service_document_id)
+
         applications.append(
             {
                 "reference": f"REF_{str(ap.id)}",
+                "document_name": service_document.name,
                 "status": ap.status,
             }
         )
@@ -223,6 +234,44 @@ async def send_missing_data(reference: str, payload: MissingData, request: Reque
 
     _ap.data = {**_ap.data, **payload.data}
     _ap.status = ApplicationStatus.PENDING
+    _ap.modified_at = datetime.now()
+    await _ap.save()
+
+    return {
+        "reference": f"REF_{str(_ap.id)}",
+    }
+
+
+# cancel application
+@application_router.delete("/{reference}")
+async def cancel_application(reference: str, request: Request):
+    if not re.match(r"REF_[a-f0-9]{24}", reference):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid reference",
+        )
+    jwt_token = await FastJWT().decode(request.headers["Authorization"])
+    jwt_token["id"] = PydanticObjectId(jwt_token["id"])
+
+    _user = await UserDoc.get(jwt_token["id"])
+
+    _ap = await ApplicationDoc.find_one(
+        {"user_id": _user.id, "_id": PydanticObjectId(reference[4:])}
+    )
+
+    if not _ap:
+        raise HTTPException(
+            status_code=404,
+            detail="Application not found",
+        )
+
+    if _ap.status in [ApplicationStatus.APPROVED, ApplicationStatus.REJECTED]:
+        raise HTTPException(
+            status_code=400,
+            detail="Application is already processed",
+        )
+
+    _ap.status = ApplicationStatus.CANCELLED
     _ap.modified_at = datetime.now()
     await _ap.save()
 

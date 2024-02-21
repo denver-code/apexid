@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from beanie import Document, PydanticObjectId
 from pydantic import Field
@@ -26,3 +26,14 @@ class ServiceDocument(Document):
 
     class Settings:
         name = "service_documents"
+
+
+class ConfrimationToken(Document):
+    user_id: PydanticObjectId
+    document_id: PydanticObjectId
+    expire_at: datetime = Field(
+        default_factory=lambda: datetime.now() + timedelta(minutes=3)
+    )
+
+    class Settings:
+        name = "confirmation_tokens"

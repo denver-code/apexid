@@ -6,6 +6,7 @@ from pydantic import Field
 
 
 class ApplicationStatus(Enum):
+    CANCELLED = "cancelled"
     AWAITING_OPERATOR = "awaiting_operator"
     PENDING = "pending"
     AWAITING_DATA = "awaiting_data"
